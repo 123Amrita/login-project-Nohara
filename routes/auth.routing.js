@@ -23,8 +23,10 @@ router.get("/usersList", authController.usersList);
 
 router.get("/profile", authMiddleware.tokenMiddleware, authController.profile); 
 
-router.get("/deleteUser", authMiddleware.tokenMiddleware, authMiddleware.rolesMiddleware("admin"), authController.deleteUser); 
+router.delete("/deleteUser/:id", authMiddleware.tokenMiddleware, authMiddleware.rolesMiddleware("Admin"), authController.deleteUser); 
 
 router.get("/getUsersList", authMiddleware.tokenMiddleware, authController.getUsersList); 
+
+router.put("/updateUsers/:id", authMiddleware.tokenMiddleware, authController.updatedUsers);
 
 module.exports= router; //this line is important to use router

@@ -117,11 +117,27 @@ exports.getUsersList= async(req, res, next) => {
     }
 }
 
-exports.deleteUser= (req,res) => {  //authorized access for specific roles only
+exports.deleteUser= async(req,res) => {  //authorized access for specific roles only
+    const deleteUser= await userSchema.findByIdAndDelete(req.params.id);
     res.json({
-        message: "Protected data is received",
-        user: req.user
+        message: "User is deleted",
+        user: deleteUser
     })
+}
+
+exports.updatedUsers= async(req,res) => {  //authorized access for specific roles only
+    const updatedUser= await userSchema.findByIdAndUpdate(req.params.id, req.body, {new : true}); // {new : true} ensures we get the exact updated data, not the old one
+    if(!updatedUser){
+    res.json({
+        status:"404",
+        message: "User not found"
+    })
+    }else{
+    res.json({
+        message: "user is updated",
+        user: updatedUser
+    });
+    } 
 }
 
 exports.profile= (req,res) => {
