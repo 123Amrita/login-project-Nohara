@@ -11,6 +11,8 @@ const SECRET_KEY= process.env.JWT_SECRETKEY;
 
 const userSchema= require('../models/User');
 
+const productSchema= require('../models/Product');
+
 //we will remove the middleware from here and will keep it in middleware file, and then combinedly we will call these APIS from routing file
 
 //post method to signup for a new user-- this will create a new user document in MongoDB
@@ -145,6 +147,27 @@ exports.profile= (req,res) => {
         message: "Protected data is received",
         user: req.user
     })
+}
+
+exports.addNewProduct = async(req, res)=> {
+   const product= new productSchema({
+      productName : req.body.productName,
+      user: req.body.user
+   });
+   await product.save();
+   await product.populate("user"); //we have to use populate explicitly here too, so that in db both user and product are saved
+   res.json({
+    "status": "200",
+     "product": product
+   })
+}
+
+exports.getAllProducts= async(req, res)=> {
+   const products= await productSchema.find().populate("user"); //we have to use the field name in product schema, not the user schema name
+   res.json({
+     "status": "200",
+     "product": products
+   })
 }
 
 //how to get all users list

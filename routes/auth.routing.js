@@ -29,4 +29,8 @@ router.get("/getUsersList", authMiddleware.tokenMiddleware, authController.getUs
 
 router.put("/updateUsers/:id", authMiddleware.tokenMiddleware, authController.updatedUsers);
 
+router.post("/addNewProduct" , authController.addNewProduct);
+
+router.get("/getAllProducts", authMiddleware.tokenMiddleware, authController.getAllProducts);
+
 module.exports= router; //this line is important to use router
