@@ -33,4 +33,14 @@ router.post("/addNewProduct" , authController.addNewProduct);
 
 router.get("/getAllProducts", authMiddleware.tokenMiddleware, authController.getAllProducts);
 
+router.post("/getTrekDetails" , authMiddleware.tokenMiddleware, authController.getTrekDetails);
+
+router.post("/createItinerary" , authMiddleware.tokenMiddleware, authController.createItinerary);
+
+router.post("/saveItinerary" , authMiddleware.tokenMiddleware, authController.saveItinerary);
+
+router.get("/getTripList", authMiddleware.tokenMiddleware, authController.getTripList);
+
+router.post("/deleteTrip", authMiddleware.tokenMiddleware, authController.deleteTrip);
+
 module.exports= router; //this line is important to use router

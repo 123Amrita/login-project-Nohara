@@ -13,6 +13,21 @@ const userSchema= require('../models/User');
 
 const productSchema= require('../models/Product');
 
+const tripSchema= require('../models/Trip');
+
+const OpenAI= require("openai");
+const { json } = require('express');
+const client= new OpenAI({
+    apiKey: process.env.GROQ_API_KEY,
+    baseURL: "https://api.groq.com/openai/v1"
+})
+
+// const {GoogleGenerativeAI}= require('@google/generative-ai');
+
+// const genAI= new GoogleGenerativeAI(
+//     "AIzaSyBNuw4KsaY6sSxpZCQTYaBRaAfErSrBNFo"
+//     );
+
 //we will remove the middleware from here and will keep it in middleware file, and then combinedly we will call these APIS from routing file
 
 //post method to signup for a new user-- this will create a new user document in MongoDB
@@ -59,7 +74,8 @@ exports.login= async(req, res, next)=>{
 
                 res.status(200).json({
                     "message":"User successfully logged in",
-                    "token":token
+                    "token":token,
+                    "userData":user
                 })
             }else{
                 return res.status(500).json({
@@ -168,6 +184,205 @@ exports.getAllProducts= async(req, res)=> {
      "status": "200",
      "product": products
    })
+}
+
+exports.getTrekDetails= async(req, res, next)=> {
+    try{
+        console.log("BODY:", req.body);
+        console.log("TYPE?:", typeof req.body);
+        const destination= typeof req.body === "string" ? req.body : req.body.destination;
+
+        const response= await client.chat.completions.create({
+            model: "llama-3.1-8b-instant",
+            messages: [
+                {
+                    role: "user",
+                    content: `Give a short trekking overview for ${destination}.
+        Generate a travel itinerary in STRICT JSON format.
+
+Rules:
+1. Please make sure to return ONLY valid JSON (no explanation, no extra text).
+2. Do NOT include newline escape characters like \n or extra quotes.
+3. Follow EXACT structure given below.
+4. All fields must always be present (even if empty).
+5. Use arrays consistently.
+6. Keep keys exactly same (no renaming).
+7. IMPORTANT: Please make sure all array values MUST be simple strings only.
+   -DO NOT return objects inside arrays.
+8. MUST include- short description in 30 words, difficulty, best time to go, highlights and treks to cover for ${destination}.
+
+Schema:
+{
+  "travelInfo": [
+    {
+      "description": "",
+      "difficulty": "",
+      "best_time_to_go": "",
+      "highlights": [],
+      "treks_to_cover": []
+    }
+  ]
+}`
+                }
+            ]
+        })
+
+        return res.json({
+            message: "Overview generated",
+            overview: response.choices[0].message.content
+        });
+    }catch(error){
+        next(error);
+    }
+}
+
+exports.createItinerary= async(req, res, next)=> {
+    try{
+        console.log("itineraryBody", req.body);
+        const response= await client.chat.completions.create({
+            model: "llama-3.1-8b-instant",
+            messages: [
+                {
+                    role: "user",
+                    content: `.
+                    We will be travelling from - ${req.body.source.name} to Destination - ${req.body.destination.name},
+                    from ${req.body.startDate} to ${req.body.endDate},
+                    difficulty level will be ${req.body.difficulty.name},
+                    with group of ${req.body.groupType.name},
+                    stay preference is ${req.body.stayPreference.name},
+                    Food preference is ${req.body.foodPreference.name},
+                    within total Budget of ${req.body.totalBudget}.
+                    Please consider this special note too, ${req.body.specialNotes}.
+                    Generate a travel itinerary in STRICT JSON format.
+
+Rules:
+1. Return ONLY valid JSON (no explanation, no extra text).
+2. Do NOT include newline escape characters like \n or extra quotes.
+3. Follow EXACT structure given below.
+4. All fields must always be present (even if empty).
+5. Use arrays consistently.
+6. Keep keys exactly same (no renaming).
+7. IMPORTANT: Please ensure all array values MUST be simple strings only.
+   -DO NOT return objects inside arrays.
+   -Provide REALISTIC and SPECIFIC suggestions for:
+   - stay (hotel, hostel, camp names)
+   - food (cafes, local cuisine, restaurants)
+   -activities
+   -highlights
+   -scenic_spots
+   -special_notes
+8. Ensure "special_notes" contains suggestions according to ${req.body.specialNotes}.
+9. Ensure "scenic_spots" contains Instagrammable places, scenic spots, photo tips, or unique experiences for that day.
+Schema:
+{
+  "trip_info": {
+    "title": "",
+    "start_location": "",
+    "end_location": "",
+    "duration": "",
+    "budget": 0
+  },
+  "itinerary": [
+    {
+      "day": 1,
+      "title": "",
+      "location": "",
+      "activities": [],
+      "stay": [],
+      "food": [],
+      "highlights": [],
+      "scenic_Spots": [],
+      "special_notes": []
+    }
+  ]
+}
+                    `
+                }
+            ]
+        })
+
+        return res.json({
+            message: "Overview generated",
+            overview: response.choices[0].message.content
+        });
+    }catch(error){
+        next(error);
+    }
+}
+
+exports.saveItinerary= async(req,res,next) => {
+    try{
+    const tripDetails= new tripSchema();
+    tripDetails.travelName= req.body.travelName;
+    tripDetails.difficulty= req.body.difficulty.name;
+    tripDetails.foodPreference= req.body.foodPreference.name;
+    tripDetails.groupType= req.body.groupType.name;
+    tripDetails.source= req.body.source.name;
+    tripDetails.stayPreference= req.body.stayPreference.name;
+    tripDetails.destination= req.body.destination.name;
+    tripDetails.startDate= new Date(req.body.startDate).toString();
+    tripDetails.endDate= new Date(req.body.endDate).toString();
+    tripDetails.AIOverview= req.body.AIOverview;
+    tripDetails.specialNotes= req.body.specialNotes;
+    tripDetails.totalBudget= req.body.totalBudget;
+    await tripDetails.save();
+    return res.json({"message": "Successfully saved.", "status":200});
+    }
+    catch(error){
+    next(error);
+    }
+    
+}
+
+exports.getTripList= async(req, res, next) => {
+    try{
+        const page= parseInt(req.query.page) || 1;
+        const limit= parseInt(req.query.limit) || 5;
+
+        const skip= (page - 1) * limit;
+
+        let tripList= await tripSchema.find().skip(skip).limit(limit); // we will pass page number and limit in here
+
+
+        //we will use this to filter by any parameter
+        const role = req.query.role;
+        const filter= {};
+
+        if(role){
+            filter.role= role;
+        }
+
+        tripList= await tripSchema.find(filter);
+
+        //we will use this to search with any pattern matching, for name/email etc.
+        const search = req.query.search;
+        const searchFilter= {};
+
+        if(search){
+            searchFilter.name= {    // $regex-- pattern matching, $options-- ignore case
+                $regex: search,
+                $options: "i"
+            }
+        }
+
+        tripList= await tripSchema.find(searchFilter);
+
+        res.json({page,
+                  limit,
+                  data: tripList
+        })
+    }catch(error){
+        next(error);
+    }
+}
+
+exports.deleteTrip= async(req,res) => {  //authorized access for specific roles only
+    console.log(req.body);
+    const deleteUser= await tripSchema.findByIdAndDelete(req.body.id);
+    return res.json({
+        message: "Trip is deleted",
+        user: deleteUser
+    })
 }
 
 //how to get all users list

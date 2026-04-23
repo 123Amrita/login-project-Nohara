@@ -4,7 +4,8 @@ require('dotenv').config({
 
 const dns= require('dns');
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
-const connectDB= require('./config/db.js')
+const connectDB= require('./config/db.js');
+const cors= require('cors');
 
 //to use port from env files only
 const PORT= process.env.PORT;
@@ -16,6 +17,7 @@ const errorHandler= require('./middleware/error.middleware.js');
 
 const app= express();
 app.use(express.json()); //this is the middleware (A function that runs before the request reaches your route)
+app.use(cors()); //this will allow cross-origin requests.We can either allow all origins/restrict to specific frontend URLs.
 
 app.get("/test", (req,res)=> {
     console.log("Test route hit")
