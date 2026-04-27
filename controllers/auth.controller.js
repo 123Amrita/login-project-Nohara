@@ -260,19 +260,19 @@ Rules:
 2. Do NOT include newline escape characters like \n or extra quotes.
 3. Follow EXACT structure given below.
 4. All fields must always be present (even if empty).
-5. Use arrays consistently.
+5. Use arrays consistently - EVERY array must contain ONLY string values.
 6. Keep keys exactly same (no renaming).
-7. IMPORTANT: Please ensure all array values MUST be simple strings only.
-   -DO NOT return objects inside arrays.
-   -Provide REALISTIC and SPECIFIC suggestions for:
-   - stay (hotel, hostel, camp names)
-   - food (cafes, local cuisine, restaurants)
-   -activities
-   -highlights
-   -scenic_spots
-   -special_notes
-8. Ensure "special_notes" contains suggestions according to ${req.body.specialNotes}.
-9. Ensure "scenic_spots" contains Instagrammable places, scenic spots, photo tips, or unique experiences for that day.
+7. CRITICAL: ALL arrays must contain ONLY simple text strings - NEVER return objects, nested structures, or complex types inside any array.
+   Examples of CORRECT format:
+   - "activities": ["Hiking to summit", "Visit local market", "Photography session"]
+   - "scenic_Spots": ["Sunrise viewpoint with mountain backdrop", "Instagram-famous waterfall", "Hidden cave with natural light"]
+   - "stay": ["Hotel Royal Palace", "Mountain Lodge Resort", "Local homestay"]
+   - "food": ["Traditional local restaurant", "Cafe Himalaya", "Street food vendors"]
+   - "highlights": ["Best viewpoint of the day", "Encounter with local culture", "Unique rock formations"]
+   - "special_notes": ["Pack warm clothes for evening", "Bring sunscreen for high altitude", "Camera essential for photo ops"]
+8. Each string in arrays should be descriptive (20-40 words max) and realistic.
+9. Ensure "scenic_Spots" specifically contains Instagrammable places, scenic viewing points, photography tips, or unique photo-worthy experiences as plain text strings.
+
 Schema:
 {
   "trip_info": {
@@ -287,12 +287,12 @@ Schema:
       "day": 1,
       "title": "",
       "location": "",
-      "activities": [],
-      "stay": [],
-      "food": [],
-      "highlights": [],
-      "scenic_Spots": [],
-      "special_notes": []
+      "activities": ["string", "string"],
+      "stay": ["string", "string"],
+      "food": ["string", "string"],
+      "highlights": ["string", "string"],
+      "scenic_Spots": ["string", "string"],
+      "special_notes": ["string", "string"]
     }
   ]
 }
