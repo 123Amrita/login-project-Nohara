@@ -65,7 +65,7 @@ exports.login= async(req, res, next)=>{
                 const token= jwt.sign({
                     userId: emailIdExists._id, 
                     emailId: emailIdExists.emailId,//userId and emailId will be stored in the token
-                    role: user.role //role will also be stored in token for authorized access only
+                    role: emailIdExists.role //role will also be stored in token for authorized access only
                 },
                 SECRET_KEY,
                 {
@@ -75,7 +75,7 @@ exports.login= async(req, res, next)=>{
                 res.status(200).json({
                     "message":"User successfully logged in",
                     "token":token,
-                    "userData":user
+                    "userData":emailIdExists
                 })
             }else{
                 return res.status(500).json({
@@ -143,17 +143,18 @@ exports.deleteUser= async(req,res) => {  //authorized access for specific roles 
     })
 }
 
-exports.updatedUsers= async(req,res) => {  //authorized access for specific roles only
-    const updatedUser= await userSchema.findByIdAndUpdate(req.params.id, req.body, {new : true}); // {new : true} ensures we get the exact updated data, not the old one
-    if(!updatedUser){
+exports.updateItinerary= async(req,res) => {  //authorized access for specific roles only
+    const updatedTrip= await tripSchema.findByIdAndUpdate(req.body._id, req.body, {new : true}); // {new : true} ensures we get the exact updated data, not the old one
+    if(!updatedTrip){
     res.json({
         status:"404",
-        message: "User not found"
+        message: "no trip found"
     })
     }else{
     res.json({
-        message: "user is updated",
-        user: updatedUser
+        status:"200",
+        message: "trip is updated",
+        trip: updatedTrip
     });
     } 
 }
@@ -314,58 +315,47 @@ exports.saveItinerary= async(req,res,next) => {
     try{
     const tripDetails= new tripSchema();
     tripDetails.travelName= req.body.travelName;
-    tripDetails.difficulty= req.body.difficulty.name;
-    tripDetails.foodPreference= req.body.foodPreference.name;
-    tripDetails.groupType= req.body.groupType.name;
-    tripDetails.source= req.body.source.name;
-    tripDetails.stayPreference= req.body.stayPreference.name;
-    tripDetails.destination= req.body.destination.name;
+    tripDetails.difficulty= req.body.difficulty;
+    tripDetails.foodPreference= req.body.foodPreference;
+    tripDetails.groupType= req.body.groupType;
+    tripDetails.source= req.body.source;
+    tripDetails.stayPreference= req.body.stayPreference;
+    tripDetails.destination= req.body.destination;
     tripDetails.startDate= new Date(req.body.startDate).toString();
     tripDetails.endDate= new Date(req.body.endDate).toString();
     tripDetails.AIOverview= req.body.AIOverview;
     tripDetails.specialNotes= req.body.specialNotes;
     tripDetails.totalBudget= req.body.totalBudget;
+    tripDetails.userId= req.body.userId;
+    tripDetails.createdAt= req.body.createdAt;
     await tripDetails.save();
     return res.json({"message": "Successfully saved.", "status":200});
     }
     catch(error){
     next(error);
     }
-    
 }
 
 exports.getTripList= async(req, res, next) => {
     try{
+        console.log("userId", req.body);
+        //const tripDetails= new tripSchema();
+        //tripDetails.userId= req.body.userId;
         const page= parseInt(req.query.page) || 1;
         const limit= parseInt(req.query.limit) || 5;
-
         const skip= (page - 1) * limit;
 
-        let tripList= await tripSchema.find().skip(skip).limit(limit); // we will pass page number and limit in here
+        let filter= {"userId": req.body.userId}; // Start with userId filter
 
-
-        //we will use this to filter by any parameter
-        const role = req.query.role;
-        const filter= {};
-
-        if(role){
-            filter.role= role;
+        if(req.query.role) {
+            filter.role= req.query.role;
         }
 
-        tripList= await tripSchema.find(filter);
-
-        //we will use this to search with any pattern matching, for name/email etc.
-        const search = req.query.search;
-        const searchFilter= {};
-
-        if(search){
-            searchFilter.name= {    // $regex-- pattern matching, $options-- ignore case
-                $regex: search,
-                $options: "i"
-            }
+        if(req.query.search) {
+            filter.travelName= {$regex: req.query.search, $options: "i"};
         }
 
-        tripList= await tripSchema.find(searchFilter);
+        let tripList= await tripSchema.find(filter).skip(skip).limit(limit);
 
         res.json({page,
                   limit,

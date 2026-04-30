@@ -27,7 +27,7 @@ router.delete("/deleteUser/:id", authMiddleware.tokenMiddleware, authMiddleware.
 
 router.get("/getUsersList", authMiddleware.tokenMiddleware, authController.getUsersList); 
 
-router.put("/updateUsers/:id", authMiddleware.tokenMiddleware, authController.updatedUsers);
+router.post("/updateItinerary", authMiddleware.tokenMiddleware, authController.updateItinerary);
 
 router.post("/addNewProduct" , authController.addNewProduct);
 
@@ -39,7 +39,7 @@ router.post("/createItinerary" , authMiddleware.tokenMiddleware, authController.
 
 router.post("/saveItinerary" , authMiddleware.tokenMiddleware, authController.saveItinerary);
 
-router.get("/getTripList", authMiddleware.tokenMiddleware, authController.getTripList);
+router.post("/getTripList", authMiddleware.tokenMiddleware, authController.getTripList);
 
 router.post("/deleteTrip", authMiddleware.tokenMiddleware, authController.deleteTrip);
 
