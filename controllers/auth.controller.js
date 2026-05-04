@@ -370,6 +370,7 @@ exports.deleteTrip= async(req,res) => {  //authorized access for specific roles 
     console.log(req.body);
     const deleteUser= await tripSchema.findByIdAndDelete(req.body.id);
     return res.json({
+        status: 200,
         message: "Trip is deleted",
         user: deleteUser
     })
