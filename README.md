@@ -22,14 +22,7 @@ This is the backend service for the TrailMate Travel Planner application. It pro
 - POST /login → Login user
 
 ### Itinerary Routes (Protected)
-- POST /itinerary → Create itinerary
-- GET /itinerary → Get user-specific itineraries
-- PUT /itinerary/:id → Update itinerary
-- DELETE /itinerary/:id → Delete itinerary
-
-## ⚙️ Installation
-
-```bash
-git clone https://github.com/123Amrita/login-project-Nohara
-cd backend
-npm install
+- POST /createItinerary → Create itinerary
+- GET /getTripList → Get user-specific itineraries
+- POST /updateItinerary → Update itinerary
+- POST /deleteTrip → Delete itinerary
